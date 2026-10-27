@@ -1,16 +1,20 @@
 #pragma once
+#include <string>
 
-// A single fuel tank.
-// TODO: support several tanks per aircraft (left/right wing).
 class FuelTank {
 public:
-    explicit FuelTank(double capacity);
+    FuelTank(std::string id, double capacity);
 
-    bool addFuel(double amount);  // false if it would overfill
+    bool addFuel(double amount);     // false if it would overfill
+    bool removeFuel(double amount);  // false if there isn't enough fuel
     double getLevel() const;
+    bool isLow() const;              // below 10% of capacity
+
+    std::string getId() const;
     double getCapacity() const;
 
 private:
+    std::string id;
     double capacity;  // kg
     double level;     // kg
 };

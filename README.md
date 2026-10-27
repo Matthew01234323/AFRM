@@ -13,17 +13,15 @@ cmake --build build
 .\build\afrm.exe
 ```
 
-## Status (v0.3)
+## Status (v0.4)
 
-- `Weather` class: wind speed, wind direction and temperature, giving the
-  headwind component for a heading
-- `Route` class: distance and heading (single leg for now)
-- Fleet moved into its own file (`src/Fleet.cpp`)
-- Trip fuel now uses the route and weather instead of a single headwind value
-- Contingency (5%) and final reserve (30 min) fuel
-- Fuel on board limited to the aircraft's tank capacity
+- `FuelSystem` class: each aircraft now has LEFT and RIGHT tanks
+- Fuel entered per tank, limited to each tank's capacity
+- Tank balance check, with automatic fuel transfer if unbalanced
+- Low-tank warnings
+- Maximum range (full tanks, keeping reserves)
+- Weather and route as in v0.3
 
 ## Planned next
-- Several tanks per aircraft, with balance checking
-- Maximum range calculation
+- Engine efficiency, max weight and mid-flight refuelling
 - Flight plan class with validation
