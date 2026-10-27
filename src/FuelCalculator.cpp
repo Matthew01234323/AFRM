@@ -1,7 +1,8 @@
 #include "FuelCalculator.hpp"
 
-double FuelCalculator::tripFuel(const Aircraft& aircraft, double distance, double headwind) {
-    return aircraft.fuelBurn(distance, headwind);
+double FuelCalculator::tripFuel(const Aircraft& aircraft, const Route& route,
+                                const Weather& weather) {
+    return aircraft.fuelBurn(route.totalDistance(), weather, route.getHeading());
 }
 
 double FuelCalculator::contingencyFuel(double tripFuel) { return tripFuel * 0.05; }

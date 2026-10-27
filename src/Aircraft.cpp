@@ -14,8 +14,8 @@ double Aircraft::getBurnRate() const { return burnRate; }
 FuelTank& Aircraft::getTank() { return tank; }
 const FuelTank& Aircraft::getTank() const { return tank; }
 
-double Aircraft::fuelBurn(double distance, double headwind) const {
-    const double groundSpeed = cruiseSpeed - headwind;
+double Aircraft::fuelBurn(double distance, const Weather& weather, double heading) const {
+    const double groundSpeed = cruiseSpeed - weather.headwind(heading);
     const double hours = distance / groundSpeed;
     return hours * burnRate;
 }
