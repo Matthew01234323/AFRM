@@ -1,12 +1,26 @@
 #pragma once
 #include <string>
 
-// Simulated performance data for one aircraft type.
-// Values are made up for the prototype - NOT real aircraft data.
-struct Aircraft {
-    std::string name;
-    double cruiseSpeedKt;     // cruise speed in knots
-    double cruiseFlowKgPerH;  // fuel burned per hour in cruise (kg/h)
-    double taxiFuelKg;        // fixed fuel allowance for taxi (kg)
-    double maxFuelKg;         // tank capacity (kg)
+#include "FuelTank.hpp"
+
+class Aircraft {
+public:
+    Aircraft(std::string registration, std::string model, double cruiseSpeed, double burnRate,
+             double tankCapacity);
+
+    std::string getRegistration() const;
+    std::string getModel() const;
+    double getBurnRate() const;
+    FuelTank& getTank();
+    const FuelTank& getTank() const;
+
+    // Fuel to fly a distance (nm) with a headwind (kt). Negative headwind = tailwind.
+    double fuelBurn(double distance, double headwind) const;
+
+private:
+    std::string registration;
+    std::string model;
+    double cruiseSpeed;  // knots
+    double burnRate;     // kg per hour
+    FuelTank tank;
 };
