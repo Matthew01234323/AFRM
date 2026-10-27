@@ -3,50 +3,65 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <string>
+#include <vector>
 
 #include "Aircraft.hpp"
 #include "FuelCalculator.hpp"
 
-// Asks the user for a positive number, repeating until one is entered.
-double readPositive(const char* prompt) {
-    double value = 0;
+// Asks for a number between min and max, repeating until one is entered.
+double readNumber(const std::string& prompt, double min, double max) {
+    double value;
     while (true) {
-        std::cout << prompt;
-        if (std::cin >> value && value > 0) {
-            return value;
-        }
-        std::cout << "  Please enter a number greater than 0.\n";
+        std::cout << prompt << " (" << min << " - " << max << "): ";
+        if (std::cin >> value && value >= min && value <= max) return value;
+        std::cout << "  Please enter a number between " << min << " and " << max << ".\n";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 }
 
 int main() {
-    std::cout << "=== AFRM prototype v0.1 (simulated data) ===\n\n";
-
-    // TODO: load aircraft from a data file instead of hard-coding.
-    const Aircraft aircraft{"SIM-NB (simulated narrow-body)", 450.0, 2500.0, 150.0, 18700.0};
-    std::cout << "Aircraft: " << aircraft.name << "\n\n";
-
-    const double distanceNm = readPositive("Trip distance (nm): ");
-    const double fuelOnBoardKg = readPositive("Fuel on board (kg): ");
-
-    const FuelCalculator calculator(aircraft);
-    const FuelPlan plan = calculator.calculate(distanceNm);
-
     std::cout << std::fixed << std::setprecision(0);
-    std::cout << "\n--- Fuel plan ---\n"
-              << "Taxi:          " << plan.taxiKg << " kg\n"
-              << "Trip:          " << plan.tripKg << " kg\n"
-              << "Contingency:   " << plan.contingencyKg << " kg\n"
-              << "Final reserve: " << plan.finalReserveKg << " kg\n"
-              << "Total needed:  " << plan.totalKg << " kg\n"
-              << "On board:      " << fuelOnBoardKg << " kg\n\n";
+    std::cout << "=== AFRM prototype v0.2 (simulated data) ===\n\n";
 
-    if (calculator.isSufficient(plan, fuelOnBoardKg)) {
-        std::cout << "Status: SUFFICIENT\n";
-    } else {
-        std::cout << "Status: INSUFFICIENT\n";
+    // SIMULATED values - not real aircraft data.
+    // Aircraft(registration, model, cruise speed kt, burn rate kg/h, tank capacity kg)
+    // TODO: move the fleet into its own file.
+    std::vector<Aircraft> fleet = {
+        Aircraft("SIM-001", "Narrow-body jet", 450, 2500, 18700),
+        Aircraft("SIM-002", "Regional turboprop", 275, 650, 5000),
+    };
+
+    // --- Choose aircraft ---
+    for (std::size_t i = 0; i < fleet.size(); ++i) {
+        std::cout << "  " << i + 1 << ". " << fleet[i].getRegistration() << "  "
+                  << fleet[i].getModel() << "\n";
     }
+    const int choice = static_cast<int>(readNumber("Select aircraft", 1, fleet.size()));
+    Aircraft& aircraft = fleet[static_cast<std::size_t>(choice - 1)];
+
+    // --- Inputs ---
+    // TODO: replace the single headwind value with proper weather (wind speed and direction).
+    const double distance = readNumber("Distance (nm)", 1, 10800);  // half the Earth
+    const double headwind = readNumber("Headwind (kt, negative = tailwind)", -200, 200);
+    aircraft.getTank().addFuel(
+        readNumber("Fuel on board (kg)", 0, aircraft.getTank().getCapacity()));
+
+    // --- Calculate ---
+    const double trip = FuelCalculator::tripFuel(aircraft, distance, headwind);
+    const double contingency = FuelCalculator::contingencyFuel(trip);
+    const double reserve = FuelCalculator::reserveFuel(aircraft);
+    const double required = trip + contingency + reserve;
+
+    std::cout << "\n--- " << aircraft.getRegistration() << " ---\n"
+              << "Trip fuel:      " << trip << " kg\n"
+              << "Contingency:    " << contingency << " kg\n"
+              << "Final reserve:  " << reserve << " kg\n"
+              << "Required:       " << required << " kg\n"
+              << "On board:       " << aircraft.getTank().getLevel() << " kg\n";
+
+    const bool sufficient = FuelCalculator::isSufficient(aircraft, required);
+    std::cout << "\nStatus: " << (sufficient ? "SUFFICIENT" : "INSUFFICIENT") << "\n";
     return 0;
 }

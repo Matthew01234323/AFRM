@@ -10,16 +10,18 @@ checks whether the fuel on board is sufficient.
 ```
 cmake -B build -G Ninja
 cmake --build build
-./build/afrm
+.\build\afrm.exe
 ```
 
-## Status
+## Status (v0.2)
 
-Early prototype. Currently calculates taxi, trip (cruise only), contingency
-(5%) and final reserve (30 min) fuel for one hard-coded aircraft.
+- Aircraft and fuel tank are now classes
+- Choice of two simulated aircraft
+- Trip fuel includes a headwind / tailwind
+- Contingency (5%) and final reserve (30 min) fuel
+- Fuel on board limited to the aircraft's tank capacity
 
-Planned next:
-- Split trip fuel into take-off, climb, cruise, descent and landing
-- Alternate fuel
-- Load aircraft and flights from data files
-- Unit tests (GoogleTest)
+## Planned next
+- Several tanks per aircraft, with balance checking
+- Weather (wind speed and direction) and routes
+- Flight plan class with validation
