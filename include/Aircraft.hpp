@@ -2,6 +2,7 @@
 #include <string>
 
 #include "FuelTank.hpp"
+#include "Weather.hpp"
 
 class Aircraft {
 public:
@@ -14,8 +15,8 @@ public:
     FuelTank& getTank();
     const FuelTank& getTank() const;
 
-    // Fuel to fly a distance (nm) with a headwind (kt). Negative headwind = tailwind.
-    double fuelBurn(double distance, double headwind) const;
+    // Fuel to fly a distance (nm) on a heading in this weather.
+    double fuelBurn(double distance, const Weather& weather, double heading) const;
 
 private:
     std::string registration;

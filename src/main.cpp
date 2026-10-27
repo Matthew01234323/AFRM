@@ -6,8 +6,10 @@
 #include <string>
 #include <vector>
 
-#include "Aircraft.hpp"
+#include "Fleet.hpp"
 #include "FuelCalculator.hpp"
+#include "Route.hpp"
+#include "Weather.hpp"
 
 // Asks for a number between min and max, repeating until one is entered.
 double readNumber(const std::string& prompt, double min, double max) {
@@ -23,15 +25,9 @@ double readNumber(const std::string& prompt, double min, double max) {
 
 int main() {
     std::cout << std::fixed << std::setprecision(0);
-    std::cout << "=== AFRM prototype v0.2 (simulated data) ===\n\n";
+    std::cout << "=== AFRM prototype v0.3 (simulated data) ===\n\n";
 
-    // SIMULATED values - not real aircraft data.
-    // Aircraft(registration, model, cruise speed kt, burn rate kg/h, tank capacity kg)
-    // TODO: move the fleet into its own file.
-    std::vector<Aircraft> fleet = {
-        Aircraft("SIM-001", "Narrow-body jet", 450, 2500, 18700),
-        Aircraft("SIM-002", "Regional turboprop", 275, 650, 5000),
-    };
+    std::vector<Aircraft> fleet = loadFleet();
 
     // --- Choose aircraft ---
     for (std::size_t i = 0; i < fleet.size(); ++i) {
@@ -42,19 +38,24 @@ int main() {
     Aircraft& aircraft = fleet[static_cast<std::size_t>(choice - 1)];
 
     // --- Inputs ---
-    // TODO: replace the single headwind value with proper weather (wind speed and direction).
     const double distance = readNumber("Distance (nm)", 1, 10800);  // half the Earth
-    const double headwind = readNumber("Headwind (kt, negative = tailwind)", -200, 200);
+    const double heading = readNumber("Heading (deg)", 0, 360);
+    const double windSpeed = readNumber("Wind speed (kt)", 0, 200);
+    const double windDirection = readNumber("Wind from (deg)", 0, 360);
+    const double temperature = readNumber("Temperature (C)", -60, 50);
     aircraft.getTank().addFuel(
         readNumber("Fuel on board (kg)", 0, aircraft.getTank().getCapacity()));
 
     // --- Calculate ---
-    const double trip = FuelCalculator::tripFuel(aircraft, distance, headwind);
+    const Route route(distance, heading);
+    const Weather weather(windSpeed, windDirection, temperature);
+    const double trip = FuelCalculator::tripFuel(aircraft, route, weather);
     const double contingency = FuelCalculator::contingencyFuel(trip);
     const double reserve = FuelCalculator::reserveFuel(aircraft);
     const double required = trip + contingency + reserve;
 
     std::cout << "\n--- " << aircraft.getRegistration() << " ---\n"
+              << "Headwind:       " << weather.headwind(heading) << " kt\n"
               << "Trip fuel:      " << trip << " kg\n"
               << "Contingency:    " << contingency << " kg\n"
               << "Final reserve:  " << reserve << " kg\n"
