@@ -1,7 +1,7 @@
 # AFRM - Aircraft Fuel and Range Management (prototype)
 
 Command-line prototype that calculates the fuel needed for a flight and
-checks whether the fuel on board is sufficient.
+checks whether the flight plan is valid.
 
 **Simulated data only - not for operational use.**
 
@@ -13,15 +13,28 @@ cmake --build build
 .\build\afrm.exe
 ```
 
-## Status (v0.4)
+## Status (v0.5)
 
-- `FuelSystem` class: each aircraft now has LEFT and RIGHT tanks
-- Fuel entered per tank, limited to each tank's capacity
-- Tank balance check, with automatic fuel transfer if unbalanced
-- Low-tank warnings
-- Maximum range (full tanks, keeping reserves)
-- Weather and route as in v0.3
+- Aircraft now has engine efficiency, max weight and mid-flight refuelling
+- `FlightPlan` class brings aircraft, route and weather together and validates the plan
+- Refuel check: reports mid-flight refuel needed, or fuel shortfall
+- Third simulated aircraft (military transport, can refuel in flight)
+
+## Structure
+
+| Class | Purpose |
+|---|---|
+| `Aircraft` | Aircraft data, its fuel system, fuel burn and range |
+| `FuelSystem` | The aircraft's tanks: total fuel, transfers, balance |
+| `FuelTank` | One tank: capacity and fuel level |
+| `FlightPlan` | Brings aircraft, route and weather together; required fuel and validation |
+| `Route` | Distance and heading (single leg for now) |
+| `Weather` | Wind and temperature; headwind component |
+| `FuelCalculator` | Trip, contingency (5%) and reserve (30 min) fuel, range, refuel check |
+
+New aircraft are added in `src/Fleet.cpp`.
 
 ## Planned next
-- Engine efficiency, max weight and mid-flight refuelling
-- Flight plan class with validation
+- Routes built from waypoints
+- Use temperature and aircraft weight in fuel calculations
+- Unit tests (GoogleTest)
