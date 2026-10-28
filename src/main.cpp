@@ -1,5 +1,5 @@
 // AFRM - Aircraft Fuel and Range Management prototype
-// Simulated data only. NOT FOR OPERATIONAL USE.
+// Simulated data only, NOT for operational use.
 #include <iomanip>
 #include <iostream>
 #include <limits>
@@ -9,73 +9,66 @@
 #include "Fleet.hpp"
 #include "FlightPlan.hpp"
 #include "FuelCalculator.hpp"
+#include "InputLimits.hpp"
 
-// Asks for a number between min and max, repeating until one is entered.
 double readNumber(const std::string& prompt, double min, double max) {
     double value;
     while (true) {
         std::cout << prompt << " (" << min << " - " << max << "): ";
-        if (std::cin >> value && value >= min && value <= max) return value;
+        if (std::cin >> value && inRange(value, min, max)) return value;
         std::cout << "  Please enter a number between " << min << " and " << max << ".\n";
         std::cin.clear();
         std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 }
 
+// same as readNumber but doesn't allow decimals (used for the menu)
+int readWholeNumber(const std::string& prompt, int min, int max) {
+    while (true) {
+        double value = readNumber(prompt, min, max);
+        if (value == static_cast<int>(value)) return static_cast<int>(value);
+        std::cout << "  Please enter a whole number.\n";
+    }
+}
+
 int main() {
     std::cout << std::fixed << std::setprecision(0);
-    std::cout << "=== AFRM prototype v0.5 (simulated data) ===\n\n";
+    std::cout << "=== AFRM prototype v0.6 (simulated data) ===\n\n";
 
-    // --- Choose aircraft ---
     std::vector<Aircraft> fleet = loadFleet();
-    for (std::size_t i = 0; i < fleet.size(); ++i) {
+    for (std::size_t i = 0; i < fleet.size(); i++) {
         std::cout << "  " << i + 1 << ". " << fleet[i].getRegistration() << "  "
                   << fleet[i].getModel() << "\n";
     }
-    const int choice = static_cast<int>(readNumber("Select aircraft", 1, fleet.size()));
+    int choice = readWholeNumber("Select aircraft", 1, static_cast<int>(fleet.size()));
     Aircraft& aircraft = fleet[static_cast<std::size_t>(choice - 1)];
 
-    // --- Route and weather ---
-    std::string flightNumber;
-    std::cout << "Flight number: ";
-    std::cin >> flightNumber;
-    const double distance = readNumber("Distance (nm)", 1, 10800);  // half the Earth
-    const double heading = readNumber("Heading (deg)", 0, 360);
-    const double windSpeed = readNumber("Wind speed (kt)", 0, 200);
-    const double windDirection = readNumber("Wind from (deg)", 0, 360);
-    const double temperature = readNumber("Temperature (C)", -60, 50);
+    double distance = readNumber("Distance (nm)", limits::minDistance, limits::maxDistance);
+    double heading = readNumber("Heading (deg)", limits::minHeading, limits::maxHeading);
+    double windSpeed = readNumber("Wind speed (kt)", limits::minWindSpeed, limits::maxWindSpeed);
+    double windDirection =
+        readNumber("Wind from (deg)", limits::minWindDirection, limits::maxWindDirection);
+    double temperature =
+        readNumber("Temperature (C)", limits::minTemperature, limits::maxTemperature);
 
-    // --- Load fuel into each tank ---
-    for (FuelTank& tank : aircraft.getFuelSystem().getTanks()) {
+    FuelSystem& fuel = aircraft.getFuelSystem();
+    for (FuelTank& tank : fuel.getTanks()) {
         tank.addFuel(readNumber("Fuel in " + tank.getId() + " tank (kg)", 0, tank.getCapacity()));
     }
 
-    // Balance the tanks if needed by moving half the difference.
-    FuelSystem& fuel = aircraft.getFuelSystem();
-    if (!fuel.checkBalance()) {
-        const double left = fuel.getTanks()[0].getLevel();
-        const double right = fuel.getTanks()[1].getLevel();
-        if (left > right) fuel.transferFuel(0, 1, (left - right) / 2);
-        else fuel.transferFuel(1, 0, (right - left) / 2);
-        std::cout << "Tanks were unbalanced - fuel transferred to balance them.\n";
-    }
+    Route route(distance, heading);
+    Weather weather(windSpeed, windDirection, temperature);
+    FlightPlan plan(aircraft, route, weather);
 
-    // --- Calculate ---
-    const Route route(distance, heading);
-    const Weather weather(windSpeed, windDirection, temperature);
-    const FlightPlan plan(flightNumber, aircraft, route, weather);
+    double trip = FuelCalculator::tripFuel(aircraft, route, weather);
+    double required = plan.requiredFuel();
+    double onBoard = fuel.totalFuel();
 
-    const double trip = FuelCalculator::tripFuel(aircraft, route, weather);
-    const double contingency = FuelCalculator::contingencyFuel(trip);
-    const double reserve = FuelCalculator::reserveFuel(aircraft);
-    const double required = plan.requiredFuel();
-    const double onBoard = fuel.totalFuel();
-
-    std::cout << "\n--- " << flightNumber << " / " << aircraft.getRegistration() << " ---\n"
+    std::cout << "\n--- " << aircraft.getRegistration() << " " << aircraft.getModel() << " ---\n"
               << "Headwind:       " << weather.headwind(heading) << " kt\n"
               << "Trip fuel:      " << trip << " kg\n"
-              << "Contingency:    " << contingency << " kg\n"
-              << "Final reserve:  " << reserve << " kg\n"
+              << "Contingency:    " << FuelCalculator::contingencyFuel(trip) << " kg\n"
+              << "Final reserve:  " << FuelCalculator::reserveFuel(aircraft) << " kg\n"
               << "Required:       " << required << " kg\n"
               << "On board:       " << onBoard << " kg\n"
               << "Max range:      " << FuelCalculator::maxRange(aircraft) << " nm (with reserves)\n";

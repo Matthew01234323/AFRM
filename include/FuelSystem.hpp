@@ -5,14 +5,16 @@
 
 class FuelSystem {
 public:
+    // most aircraft only have one tank, so this is the standard setup
+    explicit FuelSystem(double capacity);
     explicit FuelSystem(std::vector<FuelTank> tanks);
 
     double totalFuel() const;
     double totalCapacity() const;
-    bool transferFuel(int from, int to, double amount);  // tank numbers, e.g. 0 and 1
-    bool checkBalance() const;  // all tanks within 10% of each other
+    bool anyTankLow() const;
 
     std::vector<FuelTank>& getTanks();
+    const std::vector<FuelTank>& getTanks() const;
 
 private:
     std::vector<FuelTank> tanks;

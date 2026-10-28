@@ -2,21 +2,18 @@
 
 #include "FuelCalculator.hpp"
 
-FlightPlan::FlightPlan(std::string flightNumber, const Aircraft& aircraft, Route route,
-                       Weather weather)
-    : flightNumber(flightNumber),
-      aircraft(aircraft),
+FlightPlan::FlightPlan(const Aircraft& aircraft, Route route, Weather weather)
+    : aircraft(aircraft),
       route(route),
       weather(weather),
       plannedFuel(aircraft.getFuelSystem().totalFuel()) {}
 
 double FlightPlan::requiredFuel() const {
-    const double trip = FuelCalculator::tripFuel(aircraft, route, weather);
+    double trip = FuelCalculator::tripFuel(aircraft, route, weather);
     return trip + FuelCalculator::contingencyFuel(trip) + FuelCalculator::reserveFuel(aircraft);
 }
 
 bool FlightPlan::validate() const {
-    if (!aircraft.getFuelSystem().checkBalance()) return false;
-    if (plannedFuel < requiredFuel() && !aircraft.canRefuel()) return false;
-    return true;
+    if (plannedFuel >= requiredFuel()) return true;
+    return aircraft.canRefuel();
 }

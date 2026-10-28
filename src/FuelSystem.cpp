@@ -1,5 +1,7 @@
 #include "FuelSystem.hpp"
 
+FuelSystem::FuelSystem(double capacity) : tanks({FuelTank("MAIN", capacity)}) {}
+
 FuelSystem::FuelSystem(std::vector<FuelTank> tanks) : tanks(tanks) {}
 
 double FuelSystem::totalFuel() const {
@@ -14,26 +16,12 @@ double FuelSystem::totalCapacity() const {
     return total;
 }
 
-bool FuelSystem::transferFuel(int from, int to, double amount) {
-    FuelTank& source = tanks.at(static_cast<std::size_t>(from));
-    FuelTank& target = tanks.at(static_cast<std::size_t>(to));
-    if (amount > source.getLevel() || target.getLevel() + amount > target.getCapacity()) {
-        return false;
-    }
-    source.removeFuel(amount);
-    target.addFuel(amount);
-    return true;
-}
-
-bool FuelSystem::checkBalance() const {
-    // Simplification: the fullest and emptiest tank must be within 10% of a tank's capacity.
-    double lowest = tanks.front().getLevel();
-    double highest = lowest;
+bool FuelSystem::anyTankLow() const {
     for (const FuelTank& tank : tanks) {
-        if (tank.getLevel() < lowest) lowest = tank.getLevel();
-        if (tank.getLevel() > highest) highest = tank.getLevel();
+        if (tank.isLow()) return true;
     }
-    return highest - lowest <= tanks.front().getCapacity() * 0.10;
+    return false;
 }
 
 std::vector<FuelTank>& FuelSystem::getTanks() { return tanks; }
+const std::vector<FuelTank>& FuelSystem::getTanks() const { return tanks; }

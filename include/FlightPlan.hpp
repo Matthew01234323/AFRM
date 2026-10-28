@@ -1,19 +1,16 @@
 #pragma once
-#include <string>
-
 #include "Aircraft.hpp"
 #include "Route.hpp"
 #include "Weather.hpp"
 
 class FlightPlan {
 public:
-    FlightPlan(std::string flightNumber, const Aircraft& aircraft, Route route, Weather weather);
+    FlightPlan(const Aircraft& aircraft, Route route, Weather weather);
 
     double requiredFuel() const;  // trip + contingency + reserve
-    bool validate() const;        // tanks balanced and enough fuel (or can refuel in flight)
+    bool validate() const;        // enough fuel, or the aircraft can refuel in the air
 
 private:
-    std::string flightNumber;
     const Aircraft& aircraft;
     Route route;
     Weather weather;

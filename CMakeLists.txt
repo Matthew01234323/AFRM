@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
-project(AFRM VERSION 0.5.0 LANGUAGES CXX)
+project(AFRM VERSION 0.6.0 LANGUAGES CXX)
 
 # Standard ISO C++17, no compiler-specific extensions
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(afrm
-    src/main.cpp
+# All the classes go in a library so the main program and the tests share them
+add_library(afrm_core STATIC
     src/Aircraft.cpp
     src/FuelSystem.cpp
     src/FuelTank.cpp
@@ -17,7 +17,13 @@ add_executable(afrm
     src/FuelCalculator.cpp
     src/Fleet.cpp
 )
-target_include_directories(afrm PRIVATE include)
+target_include_directories(afrm_core PUBLIC include)
+target_compile_options(afrm_core PUBLIC -Wall -Wextra -Wpedantic)
 
-# Turn on compiler warnings
-target_compile_options(afrm PRIVATE -Wall -Wextra -Wpedantic)
+# Main program
+add_executable(afrm src/main.cpp)
+target_link_libraries(afrm PRIVATE afrm_core)
+
+# Automated tests (run with run_tests.bat)
+add_executable(afrm_tests tests/test_runner.cpp)
+target_link_libraries(afrm_tests PRIVATE afrm_core)
