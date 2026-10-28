@@ -27,3 +27,7 @@ target_link_libraries(afrm PRIVATE afrm_core)
 # Automated tests (run with run_tests.bat)
 add_executable(afrm_tests tests/test_runner.cpp)
 target_link_libraries(afrm_tests PRIVATE afrm_core)
+
+# Graph maker (run with make_graphs.bat, after the tests)
+add_executable(afrm_graphs tests/make_graphs.cpp)
+target_link_libraries(afrm_graphs PRIVATE afrm_core)
